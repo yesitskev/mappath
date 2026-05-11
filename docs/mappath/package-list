@@ -1,0 +1,12 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:io.github.yesitskev.mappath////PointingToDeclaration/mappath/io.github.yesitskev.mappath/index.html
+$dokka.location:io.github.yesitskev.mappath//add/kotlin.collections.MutableMap[kotlin.String,kotlin.Any]#kotlin.String#kotlin.Any/PointingToDeclaration/mappath/io.github.yesitskev.mappath/add.html
+$dokka.location:io.github.yesitskev.mappath//containsPath/kotlin.collections.Map[kotlin.String,kotlin.Any]#kotlin.String/PointingToDeclaration/mappath/io.github.yesitskev.mappath/contains-path.html
+$dokka.location:io.github.yesitskev.mappath//delete/kotlin.collections.MutableMap[kotlin.String,kotlin.Any]#kotlin.String/PointingToDeclaration/mappath/io.github.yesitskev.mappath/delete.html
+$dokka.location:io.github.yesitskev.mappath//query/kotlin.collections.Map[kotlin.String,kotlin.Any]#kotlin.String/PointingToDeclaration/mappath/io.github.yesitskev.mappath/query.html
+$dokka.location:io.github.yesitskev.mappath//queryAsResult/kotlin.collections.Map[kotlin.String,kotlin.Any]#kotlin.String/PointingToDeclaration/mappath/io.github.yesitskev.mappath/query-as-result.html
+$dokka.location:io.github.yesitskev.mappath//queryOrDefault/kotlin.collections.Map[kotlin.String,kotlin.Any]#kotlin.String#TypeParam(bounds=[kotlin.Any?])/PointingToDeclaration/mappath/io.github.yesitskev.mappath/query-or-default.html
+$dokka.location:io.github.yesitskev.mappath//queryOrNull/kotlin.collections.Map[kotlin.String,kotlin.Any]#kotlin.String/PointingToDeclaration/mappath/io.github.yesitskev.mappath/query-or-null.html
+$dokka.location:io.github.yesitskev.mappath//set/kotlin.collections.MutableMap[kotlin.String,kotlin.Any]#kotlin.String#kotlin.Any/PointingToDeclaration/mappath/io.github.yesitskev.mappath/set.html
+io.github.yesitskev.mappath
