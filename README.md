@@ -65,15 +65,30 @@ data.
 
 ## API Usage Examples
 
-The API is a set of extension functions on `Map<String, Any>`. Import the functions you need:
+The API is a set of extension functions on `Map<String, Any>` (read operations) and `MutableMap<String, Any>` (modification operations). Import the functions you need:
 
 ```kotlin
 import io.github.yesitskev.mappath.query
+import io.github.yesitskev.mappath.queryOrNull
+import io.github.yesitskev.mappath.queryOrDefault
 import io.github.yesitskev.mappath.queryAsResult
+import io.github.yesitskev.mappath.containsPath
 import io.github.yesitskev.mappath.set
 import io.github.yesitskev.mappath.add
 import io.github.yesitskev.mappath.delete
 ```
+
+### Read Operations
+
+| Function          | Behavior on miss / type mismatch                                |
+|-------------------|-----------------------------------------------------------------|
+| `query<T>`        | Throws `NoSuchElementException` / `IllegalArgumentException`    |
+| `queryOrNull<T>`  | Returns `null`                                                  |
+| `queryOrDefault<T>` | Returns the supplied default                                  |
+| `queryAsResult<T>` | Returns `Result.failure` wrapping the exception                |
+| `containsPath`    | Returns `Boolean` — distinguishes "key absent" from "value null" |
+
+`query` and its variants take a reified type parameter. Use `query<Any>(path)` when the value type is genuinely unknown.
 
 ### Basic Path Queries
 
@@ -119,53 +134,62 @@ val data = mapOf(
 )
 
 // Root node access
-val root = data.query("$")
+val root = data.query<Map<String, Any>>("$")
 // Result: entire data structure
 
 // Dot notation
-val color = data.query("$.store.bicycle.color")
+val color = data.query<String>("$.store.bicycle.color")
 // Result: "red"
 
 // Bracket notation
-val sameColor = data.query("$['store']['bicycle']['color']")
+val sameColor = data.query<String>("$['store']['bicycle']['color']")
 // Result: "red"
 
 // Array index
-val firstBook = data.query("$.store.book[0].title")
+val firstBook = data.query<String>("$.store.book[0].title")
 // Result: "Sayings of the Century"
 
 // Negative index (from end)
-val lastBook = data.query("$.store.book[-1].title")
+val lastBook = data.query<String>("$.store.book[-1].title")
 // Result: "The Lord of the Rings"
 
 // Wildcard
-val allTitles = data.query("$.store.book[*].title")
+val allTitles = data.query<List<String>>("$.store.book[*].title")
 // Result: ["Sayings of the Century", "Sword of Honour", "Moby Dick", "The Lord of the Rings"]
+
+// Null-safe variants
+val missing = data.queryOrNull<String>("$.store.missing")           // null
+val fallback = data.queryOrDefault("$.store.missing", "unknown")    // "unknown"
+val result = data.queryAsResult<String>("$.store.bicycle.color")    // Result.success("red")
+
+// Existence check — distinguishes "key absent" from "value is null"
+val hasColor = data.containsPath("$.store.bicycle.color")           // true
+val hasMissing = data.containsPath("$.store.missing")               // false
 ```
 
 ### Array Operations
 
 ```kotlin
 // Array slice
-val firstTwo = data.query("$.store.book[0:2].title")
+val firstTwo = data.query<List<String>>("$.store.book[0:2].title")
 // Result: ["Sayings of the Century", "Sword of Honour"]
 
 val numbers = mapOf("numbers" to listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 
 // Slice with step
-val everyOther = numbers.query("$.numbers[0:10:2]")
+val everyOther = numbers.query<List<Int>>("$.numbers[0:10:2]")
 // Result: [1, 3, 5, 7, 9]
 
 // Reverse array
-val reversed = numbers.query("$.numbers[::-1]")
+val reversed = numbers.query<List<Int>>("$.numbers[::-1]")
 // Result: [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
 // Union operator (multiple indices)
-val specific = data.query("$.store.book[0,2].title")
+val specific = data.query<List<String>>("$.store.book[0,2].title")
 // Result: ["Sayings of the Century", "Moby Dick"]
 
 // Union with property names
-val bikeProps = data.query("$.store.bicycle['color','price']")
+val bikeProps = data.query<List<Any>>("$.store.bicycle['color','price']")
 // Result: ["red", 19.95]
 ```
 
@@ -173,11 +197,11 @@ val bikeProps = data.query("$.store.bicycle['color','price']")
 
 ```kotlin
 // Find all prices at any depth
-val allPrices = data.query("$..price")
+val allPrices = data.query<List<Double>>("$..price")
 // Result: [8.95, 12.99, 8.99, 22.99, 19.95]
 
 // Find all authors
-val allAuthors = data.query("$..author")
+val allAuthors = data.query<List<String>>("$..author")
 // Result: ["Nigel Rees", "Evelyn Waugh", "Herman Melville", "J. R. R. Tolkien"]
 ```
 
@@ -185,19 +209,19 @@ val allAuthors = data.query("$..author")
 
 ```kotlin
 // Basic filter
-val cheapBooks = data.query("$.store.book[?(@.price < 10)].title")
+val cheapBooks = data.query<List<String>>("$.store.book[?(@.price < 10)].title")
 // Result: ["Sayings of the Century", "Moby Dick"]
 
 // String equality
-val fiction = data.query("$.store.book[?(@.category == 'fiction')].title")
+val fiction = data.query<List<String>>("$.store.book[?(@.category == 'fiction')].title")
 // Result: ["Sword of Honour", "Moby Dick", "The Lord of the Rings"]
 
 // Comparison operators
-val expensive = data.query("$.store.book[?(@.price > 20)].title")
+val expensive = data.query<List<String>>("$.store.book[?(@.price > 20)].title")
 // Result: ["The Lord of the Rings"]
 
 // Regex matching
-val lordBooks = data.query("$.store.book[?(@.title =~ /.*Lord.*/i)].title")
+val lordBooks = data.query<List<String>>("$.store.book[?(@.title =~ /.*Lord.*/i)].title")
 // Result: ["The Lord of the Rings"]
 
 // IN operator
@@ -207,23 +231,23 @@ val testData = mapOf(
     mapOf("category" to "B", "tags" to listOf("green", "yellow"))
   )
 )
-val withRedTag = testData.query("$.items[?('red' in @.tags)].category")
+val withRedTag = testData.query<List<String>>("$.items[?('red' in @.tags)].category")
 // Result: ["A"]
 
 // Logical AND
-val midPriced = data.query("$.store.book[?(@.price > 10 && @.price < 20)].title")
+val midPriced = data.query<List<String>>("$.store.book[?(@.price > 10 && @.price < 20)].title")
 // Result: ["Sword of Honour"]
 
 // Logical OR
-val extremePrices = data.query("$.store.book[?(@.price < 9 || @.price > 20)].title")
+val extremePrices = data.query<List<String>>("$.store.book[?(@.price < 9 || @.price > 20)].title")
 // Result: ["Sayings of the Century", "Moby Dick", "The Lord of the Rings"]
 
 // Logical NOT
-val notExpensive = data.query("$.store.book[?(!(@.price > 10))].title")
+val notExpensive = data.query<List<String>>("$.store.book[?(!(@.price > 10))].title")
 // Result: ["Sayings of the Century", "Moby Dick"]
 
 // Complex expressions
-val complexFilter = data.query("$.store.book[?((@.price < 10 || @.price > 20) && @.category == 'fiction')].title")
+val complexFilter = data.query<List<String>>("$.store.book[?((@.price < 10 || @.price > 20) && @.category == 'fiction')].title")
 // Result: ["Moby Dick", "The Lord of the Rings"]
 ```
 
@@ -233,24 +257,24 @@ val complexFilter = data.query("$.store.book[?((@.price < 10 || @.price > 20) &&
 val numbers = mapOf("numbers" to listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10))
 
 // Aggregation functions
-val min = numbers.query("$.numbers.min()")
+val min = numbers.query<Number>("$.numbers.min()")
 // Result: 1
 
-val max = numbers.query("$.numbers.max()")
+val max = numbers.query<Number>("$.numbers.max()")
 // Result: 10
 
-val avg = numbers.query("$.numbers.avg()")
+val avg = numbers.query<Number>("$.numbers.avg()")
 // Result: 5.5
 
-val sum = numbers.query("$.numbers.sum()")
+val sum = numbers.query<Number>("$.numbers.sum()")
 // Result: 55
 
 // Length
-val bookCount = data.query("$.store.book.length()")
+val bookCount = data.query<Int>("$.store.book.length()")
 // Result: 4
 
 // Keys
-val storeKeys = data.query("$.store.keys()")
+val storeKeys = data.query<List<String>>("$.store.keys()")
 // Result: ["book", "bicycle"]
 
 // Concat
@@ -260,51 +284,59 @@ val arrays = mapOf(
     "second" to listOf(4, 5, 6)
   )
 )
-val combined = arrays.query("$.arrays.concat()")
+val combined = arrays.query<List<Int>>("$.arrays.concat()")
 // Result: [1, 2, 3, 4, 5, 6]
 ```
 
 ### Modification Operations
 
-All modification operations return a new immutable copy – the original data is never modified.
+`set`, `add`, and `delete` are extension functions on `MutableMap<String, Any>`. They mutate the
+receiver in place and return the *previous* value at the leaf (or `null` if there was none),
+matching the contract of [`MutableMap.put`] / [`MutableMap.remove`]. Any nested `Map`/`List`
+traversed must itself be mutable.
+
+| Function | Auto-creates missing intermediates? | List indices                |
+|----------|-------------------------------------|-----------------------------|
+| `set`    | No — intermediates must already exist | Must be in bounds         |
+| `add`    | Yes — missing intermediate maps are created | Must be in bounds (does not grow lists) |
+| `delete` | No — intermediates must already exist | Must be in bounds (not a no-op) |
 
 ```kotlin
-// Set - update existing values
-val testData = mapOf("name" to "John", "age" to 30)
-val updated = testData.set("$.name", "Jane")
-// Result: {"name": "Jane", "age": 30}
-// Original testData is unchanged
+// Set - replaces an existing leaf value (intermediates must exist)
+val testData = mutableMapOf<String, Any>("name" to "John", "age" to 30)
+val previousName = testData.set("$.name", "Jane")
+// previousName == "John"
+// testData is now {"name": "Jane", "age": 30}
 
 // Set nested property
-val userData = mapOf(
-  "user" to mapOf(
+val userData = mutableMapOf<String, Any>(
+  "user" to mutableMapOf<String, Any>(
     "name" to "John",
-    "address" to mapOf(
+    "address" to mutableMapOf<String, Any>(
       "city" to "Seattle",
       "zip" to "98101"
     )
   )
 )
-val moved = userData.set("$.user.address.city", "Portland")
-// Result: city is now "Portland"
+userData.set("$.user.address.city", "Portland")
+// userData["user"]["address"]["city"] is now "Portland"
 
-// Add - create new properties or update existing
-val withEmail = testData.add("$.email", "john@example.com")
-// Result: {"name": "John", "age": 30, "email": "john@example.com"}
+// Add - like set, but creates missing intermediate maps along the path
+testData.add("$.email", "john@example.com")
+// testData is now {"name": "Jane", "age": 30, "email": "john@example.com"}
 
-// Add can create deeply nested paths
-val empty = emptyMap<String, Any>()
-val nested = empty.add("$.level1.level2.level3", "deep value")
-// Result: {"level1": {"level2": {"level3": "deep value"}}}
+val empty = mutableMapOf<String, Any>()
+empty.add("$.level1.level2.level3", "deep value")
+// empty is now {"level1": {"level2": {"level3": "deep value"}}}
 
-// Delete - remove properties
-val withoutAge = testData.delete("$.age")
-// Result: {"name": "John"}
-
-// Delete from nested structures
-val withoutColor = data.delete("$.store.bicycle.color")
-// Result: bicycle now only has "price"
+// Delete - removes a leaf; returns the removed value or null if absent
+val removedAge = testData.delete("$.age")
+// removedAge == 30
+// testData no longer contains "age"
 ```
+
+[`MutableMap.put`]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-map/put.html
+[`MutableMap.remove`]: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-map/remove.html
 
 ## License
 
