@@ -1,7 +1,14 @@
 # MapPath
 
-A JSON path utility library that applies JSON path querying to typed Kotlin data structures. This library works with `Map<String, *>` where
-`*` could be a `String`, `Number`, `Boolean`, `null`, or another nested `Map`.
+[![Build](https://github.com/yesitskev/mappath/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/yesitskev/mappath/actions/workflows/build.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.yesitskev/mappath.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.yesitskev/mappath)
+[![Security: Dependabot](https://img.shields.io/badge/security-dependabot-success?logo=dependabot)](https://github.com/yesitskev/mappath/security/dependabot)
+[![Kotlin version](https://img.shields.io/badge/Kotlin-2.0.21-blue)](https://kotlinlang.org/docs/whatsnew20.html)
+[![License](https://img.shields.io/github/license/yesitskev/mappath.svg)](LICENSE.md)
+
+MapPath provides a fluent Kotlin DSL for querying and manipulating JSON-like data structures in a type-safe manner. Instead of working with
+raw JSON strings, this library operates directly on Kotlin's Map-based representations, making it ideal for working with deserialized JSON
+data. This library works with `Map<String, *>` where `*` could be a `String`, `Number`, `Boolean`, `null`, or another nested `Map`.
 
 ## Installation
 
@@ -12,12 +19,6 @@ dependencies {
   implementation("io.github.yesitskev:mappath:1.1.0")
 }
 ```
-
-## Overview
-
-MapPath provides a fluent Kotlin DSL for querying and manipulating JSON-like data structures in a type-safe manner. Instead of working with
-raw JSON strings, this library operates directly on Kotlin's Map-based representations, making it ideal for working with deserialized JSON
-data.
 
 ## JSON Path Grammar Support
 
